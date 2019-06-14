@@ -34,9 +34,11 @@ class Worker extends Thread{
 
 
 class ParallelQuickSort {
-    Worker[] numbers;
-    int cores;
-    int total = 0;
+    int[] numbers;
+
+    ParallelQuickSort(int[] numbers){
+      this.numbers = numbers;
+    }
 
     public int[] convert(ArrayList<Integer> integers)
     {
@@ -47,7 +49,11 @@ class ParallelQuickSort {
         }
         return result;
     }
-
+    public void swap(int[] array, int first, int second){
+          int temp = array[first];
+          array[first] = array[second];
+          array[second] = temp;
+    }
     public int[] combine(int[] first, int[] last){
         int[] result = new int[first.length + last.length];
         System.arraycopy(first, 0, result, 0, first.length);
@@ -55,47 +61,66 @@ class ParallelQuickSort {
         return result;
     }
 
+    int[] trim(int[] array, int length){
+      int[] result = new int[length];
+      for (int i = 0; i < length; i++){
+        result[i] = array[i];
+      }
+      return result;
+    }
+
     int[] sort(){
-            int middle[];
             int length = this.numbers.length;
             int result[];
-
-            ArrayList<Integer> left = new ArrayList<Integer>();
-            ArrayList<Integer> right = new ArrayList<Integer>();
+            int middle = this.numbers[(length/2)];
             
-            middle[0] = this.numbers[last];
+            int leftArray[] = new int[length];
+            int leftLength = 0;
+            int rightArray[] = new int[length];
+            int rightLength = 0;
             
-            for(int i = 0; i < length; i++){
-              if(this.numbers[i] < middle[0]){
-                right.add(this.numbers[i]);
+            for(var i = 0; i < length; i++){
+              if(this.numbers[i] >= middle){
+                rightArray[rightLength] = this.numbers[i];
+                rightLength++;
               } else {
-                left.add(this.numbers[i]);
+                leftArray[leftLength] = this.numbers[i];
+                leftLength++;
               }
             }
+            // System.out.println("*** left");
+            // for (int index = 0; index < leftArray.length; index++) {
+            //   System.out.println(leftArray[index]);
+            // }
+            // System.out.println("*** right");
+            
+            // for (int index = 0; index < rightArray.length; index++) {
+            //   System.out.println(rightArray[index]);
+            // }
 
-            for(int i = 0; i < length; i++){
-              if(this.numbers[i] < middle[0]){
-                right.add(this.numbers[i]);
-              } else {
-                left.add(this.numbers[i]);
-              }
-            }
-
-            int leftArray = convert(left);
-            int rightArray = convert(right);
-
+            leftArray = trim(leftArray, leftLength);
+            rightArray = trim(rightArray, rightLength);
             Worker leftWorker = new Worker(leftArray);
             leftWorker.start();
             Worker rightWorker = new Worker(rightArray);
             rightWorker.start();
             
-            leftWorker.join();
-            rightWorker.join();
+            try {
 
-            result = combine(leftWork.sort(), middle);
-            result = combine(result, rightWork.sort());
+              leftWorker.join();
+              rightWorker.join();
 
+
+     
+
+
+            } catch (InterruptedException error) {
+              error.printStackTrace();
+            }
+            result = combine(leftWorker.sort(), rightWorker.sort());
             return result;
+
+
     }
 }
 
@@ -141,20 +166,33 @@ class QuickSort {
 }
 
 public class Main {
+   public static void printArray(int[] numbers){
+    System.out.print('[');
+		for (int index = 0; index < numbers.length; index++) {
+      System.out.print(numbers[index]);
+      if(index < numbers.length - 1){
+        System.out.print(',');
+      }
+    }
+    System.out.println(']');
+    System.out.println("");
+  }
 	public static void main(String[] args) {
-		int[] n = new RandomInt(100).get();
-    int cores  = Runtime.getRuntime().availableProcessors();
+    int[] rand = new RandomInt(50).get();
+    int[] numbers;
 
-		// QuickSort numb = new QuickSort(n);
-		// int[] numbers = numb.sort();
+    System.out.println("Unsorted Array");
+    printArray(rand);
 
-    ParallelQuickSort pquicksort = new ParallelQuickSort(cores);
+    System.out.println("Sequential QuickSort");
+		QuickSort numb = new QuickSort(rand);
+		numbers = numb.sort();
+    printArray(numbers);
     
+    System.out.println("Parallel QuickSort");
+    ParallelQuickSort pquicksort = new ParallelQuickSort(rand);
+		numbers = pquicksort.sort();
+    printArray(numbers);
 
-
-		int length = numbers.length;
-		for (int index = 0; index < length; index++) {
-			System.out.println(numbers[index]);
-		}
 	}
 }
